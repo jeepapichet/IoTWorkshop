@@ -16,7 +16,7 @@ mqttc = AWSIoTMQTTClient("1234")
 
 #Make sure you use the correct region!
 mqttc.configureEndpoint("data.iot.ap-southeast-1.amazonaws.com",8883)
-mqttc.configureCredentials("../AmazonRootCA1.pem","../xxxxxxxxxx-private.pem.key","../xxxxxxxxxx-certificate.pem.crt")
+mqttc.configureCredentials("../AmazonRootCA1.pem","../ratchet.private.key","../ratchet.cert.pem")
 
 #Function to encode a payload into JSON
 def json_encode(string):

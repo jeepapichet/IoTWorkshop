@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-# Lab 5 - Device Shadows - Completed
+# Lab 5 - Device Shadows
 # Make sure your host and region are correct.
 
 import sys
@@ -10,19 +10,18 @@ import json
 import time
 from random import randint
 
-#Setup our MQTT client and security certificates
-#Make sure your certificate names match what you downloaded from AWS IoT
 # Our motor is not currently running.
 MOTOR_STATUS = "OFF"
 
+#Setup our MQTT client and security certificates
+#Make sure your certificate names match what you downloaded from AWS IoT
 
 #Note we will use the Shadow Client here, rather than the regular AWSIoTMQTTClient.
 mqttShadowClient = AWSIoTMQTTShadowClient("ratchet")
 
 #Make sure you use the correct region!
 mqttShadowClient.configureEndpoint("data.iot.ap-southeast-1.amazonaws.com",8883)
-mqttShadowClient.configureCredentials("../AmazonRootCA1.pem","../xxxxxxxxxx-private.pem.key","../xxxxxxxxxx-certificate.pem.crt")
-
+mqttShadowClient.configureCredentials("../AmazonRootCA1.pem","../ratchet.private.key","../ratchet.cert.pem")
 
 #Set up the Shadow handlers
 shadowClient=mqttShadowClient.createShadowHandlerWithName("ratchet",True)
@@ -45,45 +44,15 @@ def customShadowCallback_Update(payload, responseStatus, token):
     if responseStatus == "timeout":
         print("Update request " + token + " time out!")
     if responseStatus == "accepted":
-        print ("Motor status successfully updated in Device Shadow " + token)
+        print "Motor status successfully updated in Device Shadow"
     if responseStatus == "rejected":
         print("Update request " + token + " rejected!")
-
-
-# Custom Shadow callback
-def customShadowCallback_Delta(payload, responseStatus, token):
-    global MOTOR_STATUS
-    # payload is a JSON string ready to be parsed using json.loads(...)
-    # in both Py2.x and Py3.x
-    payloadDict = json.loads(payload)
-    print "Device Shadow delta update received"
-
-    # Perform some basic validation of the shadow input
-    if "MOTOR" not in payloadDict["state"]:
-        print "Error: Invalid request, device cannot perform action without MOTOR state."
-        return
-    
-    # Get the desired motor status, act on it, and then update device shadow with new reported state
-    status = payloadDict["state"]["MOTOR"]
-    if status == "ON":
-        print "Request received to start motor. Starting motor and vibration analysis."
-        MOTOR_STATUS = status
-        updateDeviceShadow()
-    elif status == "OFF":
-        print "Stopping motor and vibration analysis."
-        MOTOR_STATUS = status
-        updateDeviceShadow()
-    else:
-        print "Invalid motor action, motor can only be 'ON' or 'OFF'"
-
-
+        
 #Function to encode a payload into JSON
 def json_encode(string):
         return json.dumps(string)
 
 mqttClient.json_encode=json_encode
-
-
 
 #This sends a random temperature message to the topic, 
 #value and the correct unit of measurement.
@@ -97,36 +66,19 @@ def send():
     message = mqttClient.json_encode(message)
     mqttClient.publish("data/temperature", message, 0)
     print "Temperature Message Published"
-    
- # Only send motor vibration data if the motor is on.
-    if MOTOR_STATUS == "ON":
-        vibration = randint(-500, 500)
-        message = {
-            'vibration' : vibration
-        }
-        message = mqttClient.json_encode(message)
-        mqttClient.publish("data/vibration", message, 0)
-        print "Motor is running, Vibration Message Published"
-        
+
 #Connect to the gateway
 mqttShadowClient.connect()
 print "Connected"
 
-
 #Set the initial motor status in the device shadow
 updateDeviceShadow()
-
-# Listen for delta changes
-shadowClient.shadowRegisterDeltaCallback(customShadowCallback_Delta)
 
 #Loop until terminated
 while True:
     send()
-    time.sleep(10)
+    time.sleep(5)
 
 mqttShadowClient.disconnect()
 
-
 #To check and see if your message was published to the message broker go to the MQTT Client and subscribe to the iot topic and you should see your JSON Payload
-
-

@@ -1,7 +1,5 @@
 #!/usr/bin/python
-
-# Lab 1 - Setting up.
-# Make sure your host and region are correct.
+#Lab 8 - Streaming data to DDB
 
 import sys
 import ssl
@@ -24,31 +22,24 @@ def json_encode(string):
 
 mqttc.json_encode=json_encode
 
-#Declaring our variables
-message ={
-  'val1': "Value 1",
-  'val2': "Value 2",
-  'val3': "Value 3",
-  'message': "Test Message"
-}
-
-#Encoding into JSON
-message = mqttc.json_encode(message)
-
-#This sends our test message to the iot topic
-def send():
-    mqttc.publish("iot", message, 0)
-    print ("Message Published")
-
-
-#Connect to the gateway
+#Connecting to the message broker
 mqttc.connect()
 print "Connected"
 
-#Loop until terminated
-while True:
-    send()
-    time.sleep(5)
+#For loop to generate our data
+for x in range(0,100):
+    message ={
+      'val1': "Value 1 - " + str(x+1),
+      'val2': "Value 2 - " + str(x+1),
+      'val3': "Value 3 - " + str(x+1),
+      'message': "Test Message - " + str(x+1),
+      'SeqNumber' : x,
+      'SeqSort': 1
+    }
+    message = mqttc.json_encode(message)
+    mqttc.publish("ddb", message, 0)
+    print "Message "+ str(x+1) + " published. Data:" + message
 
+print "Sending to DynamoDB"
 mqttc.disconnect()
-#To check and see if your message was published to the message broker go to the MQTT Client and subscribe to the iot topic and you should see your JSON Payload
+time.sleep(2)

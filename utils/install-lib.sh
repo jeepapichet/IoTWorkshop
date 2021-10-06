@@ -1,8 +1,8 @@
 #!/bin/bash
 
 #Install modules for IoT Core Lab
-pip2 install AWSIoTPythonSDK
-
+#pip2 install AWSIoTPythonSDK
+python -m pip install AWSIoTPythonSDK
 
 #Install for Greegrass Lab
 sudo python3 -m pip install -U pip
